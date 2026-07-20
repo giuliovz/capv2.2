@@ -1,6 +1,7 @@
 import argparse
 import http.client
 import os
+import signal
 import socket
 import subprocess
 import sys
@@ -22,6 +23,49 @@ def _selecionar_porta(preferida, tentativas=20):
         if _porta_livre(porta):
             return porta
     raise RuntimeError("Não foi encontrada porta livre para iniciar o site.")
+
+
+def _encerrar_instancias_antigas():
+    """Mata processos anteriores de executar_site.py (exceto o próprio processo)."""
+    proprio_pid = os.getpid()
+    script = os.path.abspath(__file__)
+    mortos = []
+
+    try:
+        saida = subprocess.check_output(
+            ["ps", "aux"], text=True, stderr=subprocess.DEVNULL
+        )
+        for linha in saida.splitlines():
+            if "executar_site" not in linha:
+                continue
+            partes = linha.split()
+            if len(partes) < 2:
+                continue
+            try:
+                pid = int(partes[1])
+            except ValueError:
+                continue
+            if pid == proprio_pid:
+                continue
+            try:
+                os.kill(pid, signal.SIGTERM)
+                mortos.append(pid)
+            except ProcessLookupError:
+                pass
+            except PermissionError:
+                pass
+
+    except Exception:
+        pass
+
+    if mortos:
+        time.sleep(0.5)
+        for pid in mortos:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except Exception:
+                pass
+        print(f"Instâncias anteriores encerradas: {mortos}")
 
 
 def _url_publica(porta):
@@ -69,6 +113,9 @@ if __name__ == "__main__":
     parser.add_argument("--background", action="store_true", help="Inicia em segundo plano e libera o terminal")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+
+    if not args.worker:
+        _encerrar_instancias_antigas()
 
     porta_escolhida = _selecionar_porta(args.port)
     if porta_escolhida != args.port:
