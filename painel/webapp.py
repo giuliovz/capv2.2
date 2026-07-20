@@ -1,6 +1,7 @@
 from datetime import datetime
 from threading import Lock, Thread
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -43,6 +44,22 @@ _estado_captura = {
 }
 
 _tons_permitidos = {"conservador", "equilibrado", "agressivo"}
+
+
+def _url_dashboard_publica(porta, host=None, scheme=None):
+    host = host or "127.0.0.1"
+    scheme = scheme or "http"
+
+    match_codespace = re.search(r"-\d+\.app\.github\.dev$", host)
+    if match_codespace:
+        host_publico = re.sub(r"-\d+\.app\.github\.dev$", f"-{porta}.app.github.dev", host)
+        return f"{scheme}://{host_publico}/dashboard"
+
+    if ":" in host and not host.startswith("["):
+        host_base = host.rsplit(":", 1)[0]
+        return f"{scheme}://{host_base}:{porta}/dashboard"
+
+    return f"{scheme}://{host}/dashboard"
 
 
 def _porta_livre(porta):
@@ -172,10 +189,12 @@ def status_captura():
 
 @app.get("/api/server/info")
 def server_info():
+    host = request.headers.get("X-Forwarded-Host") or request.host
+    scheme = request.headers.get("X-Forwarded-Proto") or request.scheme
     return jsonify(
         {
             "porta_atual": _PORTA_ATUAL,
-            "url_dashboard": f"http://127.0.0.1:{_PORTA_ATUAL}/dashboard",
+            "url_dashboard": _url_dashboard_publica(_PORTA_ATUAL, host=host, scheme=scheme),
         }
     )
 
@@ -203,7 +222,11 @@ def server_nova_porta():
         {
             "ok": True,
             "porta": porta,
-            "url_dashboard": f"http://127.0.0.1:{porta}/dashboard",
+            "url_dashboard": _url_dashboard_publica(
+                porta,
+                host=request.headers.get("X-Forwarded-Host") or request.host,
+                scheme=request.headers.get("X-Forwarded-Proto") or request.scheme,
+            ),
             "mensagem": "Nova instância iniciada em outra porta.",
         }
     )
