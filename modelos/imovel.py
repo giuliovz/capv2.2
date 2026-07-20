@@ -14,6 +14,8 @@ class Imovel:
 
     tipo: str = ""
 
+    finalidade: str = ""
+
     bairro: str = ""
 
     cidade: str = ""
@@ -30,6 +32,14 @@ class Imovel:
 
     area: float = 0.0
 
+    area_privativa: float = 0.0
+
+    area_total: float = 0.0
+
+    data_captura: str = ""
+
+    status: str = ""
+
     descricao: str = ""
 
     pontuacao: int = 0
@@ -44,6 +54,7 @@ class Imovel:
             "codigo": self.codigo,
             "titulo": self.titulo,
             "tipo": self.tipo,
+            "finalidade": self.finalidade,
             "bairro": self.bairro,
             "cidade": self.cidade,
             "valor": self.valor,
@@ -52,7 +63,15 @@ class Imovel:
             "banheiros": self.banheiros,
             "vagas": self.vagas,
             "area": self.area,
+            "area_privativa": self.area_privativa,
+            "area_total": self.area_total,
+            "data_captura": self.data_captura,
+            "status": self.status,
             "descricao": self.descricao,
             "pontuacao": self.pontuacao,
             "classificacao": self.classificacao,
         }
+
+    def para_dict(self):
+
+        return self.to_dict()

@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual environments
+.venv/
+.venv-1/
+venv/
+
+# IDE
+.vscode/
+
+# Runtime logs/artifacts
+logs/*.jsonl
+logs/*.log
+
+# Reports generated at runtime
+relatorios/__pycache__/
+relatorios/*.xlsx
+relatorios/dashboard.html
+
+# Local databases
+dados/imoveis.db
+
+# Temp/OS
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Legacy generated file
+Oportunidades.xlsx

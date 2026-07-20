@@ -1,0 +1,4 @@
+# Fallback de links do portal ARLETE
+# Este arquivo foi limpo automaticamente: apenas links válidos e únicos foram mantidos.
+# 1 link por linha.
+

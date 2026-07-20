@@ -1,4 +1,5 @@
 from banco.database import conectar
+from processamento.higienizacao import higienizar_dados_imoveis
 
 from filtros.pontuacao import (
     calcular_pontuacao,
@@ -9,6 +10,10 @@ from filtros.pontuacao import (
 
 def reclassificar_imoveis():
 
+    atualizados = higienizar_dados_imoveis()
+    if atualizados:
+        print("Registros higienizados:", atualizados)
+
 
     banco = conectar()
 
@@ -18,7 +23,7 @@ def reclassificar_imoveis():
 
     cursor.execute(
         """
-        SELECT *
+        SELECT id, tipo, valor, quartos, bairro, descricao
         FROM imoveis
         """
     )
@@ -37,15 +42,15 @@ def reclassificar_imoveis():
 
         dados = {
 
-            "tipo": item[3],
+            "tipo": item[1],
 
-            "valor": item[6],
+            "valor": item[2],
 
-            "quartos": item[7],
+            "quartos": item[3],
 
-            "bairro": item[5],
+            "bairro": item[4],
 
-            "descricao": item[10]
+            "descricao": item[5]
 
         }
 

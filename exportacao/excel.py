@@ -1,14 +1,17 @@
-from openpyxl import Workbook
+from datetime import date
+from pathlib import Path
 
+from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
+from config import RELATORIOS_DIR
 
 
 def exportar_excel(imoveis):
 
+    RELATORIOS_DIR.mkdir(exist_ok=True)
 
-    arquivo = "Oportunidades.xlsx"
-
+    arquivo = RELATORIOS_DIR / f"captacao_{date.today():%Y-%m-%d}.xlsx"
 
     wb = Workbook()
 
@@ -36,7 +39,9 @@ def exportar_excel(imoveis):
 
         "Quartos",
 
-        "Área",
+        "Área Privativa",
+
+        "Área Total",
 
         "Pontuação",
 
@@ -93,7 +98,25 @@ def exportar_excel(imoveis):
 
             imovel.quartos,
 
-            imovel.area_privativa,
+            getattr(
+
+                imovel,
+
+                "area_privativa",
+
+                ""
+
+            ),
+
+            getattr(
+
+                imovel,
+
+                "area_total",
+
+                ""
+
+            ),
 
             getattr(
 
@@ -156,3 +179,5 @@ def exportar_excel(imoveis):
         arquivo
 
     )
+
+    return arquivo

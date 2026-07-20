@@ -1,7 +1,6 @@
 from banco.database import conectar
 
 
-
 def buscar_indicadores():
 
 
@@ -49,10 +48,7 @@ def buscar_indicadores():
         """
     )
 
-
     indicadores["excelentes"] = cursor.fetchone()[0]
-
-
 
     cursor.execute(
         """
@@ -62,8 +58,27 @@ def buscar_indicadores():
         """
     )
 
-
     indicadores["boas"] = cursor.fetchone()[0]
+
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM imoveis
+        WHERE classificacao = 'Média'
+        """
+    )
+
+    indicadores["medias"] = cursor.fetchone()[0]
+
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM imoveis
+        WHERE classificacao = 'Baixa'
+        """
+    )
+
+    indicadores["baixas"] = cursor.fetchone()[0]
 
 
 

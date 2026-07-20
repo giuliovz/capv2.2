@@ -1,5 +1,7 @@
 from captadores.imoblu import CaptadorImoblu
 from captadores.zelt import CaptadorZelt
+from captadores.arlete import CaptadorArlete
+import time
 
 
 
@@ -13,7 +15,9 @@ def executar_todos():
 
         CaptadorImoblu(),
 
-        CaptadorZelt()
+        CaptadorZelt(),
+
+        CaptadorArlete()
 
     ]
 
@@ -33,40 +37,37 @@ def executar_todos():
         )
 
 
-        try:
+        tentativas = 3
+        resultado = []
+
+        for tentativa in range(1, tentativas + 1):
+            try:
+                resultado = captador.capturar()
+                break
+            except Exception as erro:
+                print("Erro no captador:", captador.nome, erro)
+                if tentativa == tentativas:
+                    print("Captador sem sucesso apos tentativas:", captador.nome)
+                    resultado = []
+                else:
+                    espera = tentativa * 2
+                    print(f"Retry {tentativa}/{tentativas - 1} em {espera}s...")
+                    time.sleep(espera)
+
+        print(
+
+            "Encontrados:",
+
+            len(resultado)
+
+        )
 
 
-            resultado = captador.capturar()
+        todos.extend(
 
+            resultado
 
-            print(
-
-                "Encontrados:",
-
-                len(resultado)
-
-            )
-
-
-            todos.extend(
-
-                resultado
-
-            )
-
-
-        except Exception as erro:
-
-
-            print(
-
-                "Erro no captador:",
-
-                captador.nome,
-
-                erro
-
-            )
+        )
 
 
 
