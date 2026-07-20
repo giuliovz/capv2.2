@@ -12,6 +12,7 @@ venv/
 
 # IDE
 .vscode/
+*.code-workspace
 
 # Runtime logs/artifacts
 logs/*.jsonl
@@ -23,7 +24,8 @@ relatorios/*.xlsx
 relatorios/dashboard.html
 
 # Local databases
-dados/imoveis.db
+dados/*.db
+dados/*.db.*
 
 # Temp/OS
 *.tmp

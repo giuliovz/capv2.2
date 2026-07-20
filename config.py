@@ -21,6 +21,11 @@ TIMEOUT = 60000
 # Filtros (você poderá alterar depois)
 FINALIDADE = "Venda"
 
+# Configuração do portal Imóveis-SC
+IMOVEIS_SC_CIDADE = "blumenau"
+IMOVEIS_SC_TIPO_NEGOCIO = "comprar"
+IMOVEIS_SC_MAX_PAGINAS = 5
+
 TIPOS_PERMITIDOS = [
     "Casa",
     "Apartamento",

@@ -8,6 +8,7 @@ from util.navegador import Navegador
 from extratores.imoblu import ExtratorImoblu
 from extratores.zelt import ExtratorZelt
 from extratores.arlete import ExtratorArlete
+from modelos.imovel import Imovel
 
 from banco.database import (
     criar_tabela,
@@ -115,6 +116,40 @@ def _coletar_midias_imogestao(pagina, url_base, limite=8):
     return urls
 
 
+def _criar_imovel_estruturado(anuncio):
+    dados = anuncio.get("dados_imovel") or {}
+    if not dados:
+        return None
+
+    descricao = [dados.get("titulo") or "Sem descrição"]
+
+    if dados.get("nome_anunciante"):
+        descricao.append(f"Anunciante: {dados['nome_anunciante']}")
+    if dados.get("nome_tipo_negocio"):
+        descricao.append(f"Negócio: {dados['nome_tipo_negocio']}")
+    if dados.get("nome_regiao"):
+        descricao.append(f"Região: {dados['nome_regiao']}")
+
+    return Imovel(
+        portal=anuncio.get("portal", ""),
+        link=anuncio.get("link", ""),
+        codigo=dados.get("codigo") or "",
+        titulo=(dados.get("titulo") or "")[:150],
+        tipo=dados.get("nome_tipo_imovel") or "",
+        finalidade=dados.get("nome_tipo_negocio") or "",
+        bairro=dados.get("bairro") or "",
+        cidade=dados.get("cidade") or "",
+        valor=float(dados.get("preco") or 0),
+        quartos=int(dados.get("quartos") or 0),
+        suites=int(dados.get("suites") or 0),
+        banheiros=int(dados.get("banheiros") or 0),
+        vagas=int(dados.get("vagas") or 0),
+        area_privativa=float(dados.get("area_util") or 0),
+        area_total=float(dados.get("area_total") or 0),
+        descricao="\n".join(descricao)[:1000],
+    )
+
+
 def _abrir_com_retry(navegador, link, tentativas=3):
     ultimo_erro = None
 
@@ -150,7 +185,6 @@ def escolher_extrator(portal):
     return ExtratorImoblu()
 
 
-
 def executar_pipeline(progress_callback=None, tom_ia="equilibrado"):
 
     run_id = str(uuid4())
@@ -170,7 +204,6 @@ def executar_pipeline(progress_callback=None, tom_ia="equilibrado"):
     anuncios = executar_todos()
     obs.evento("captura_links", {"total_anuncios": len(anuncios)})
 
-
     print(
         "Anúncios capturados:",
         len(anuncios)
@@ -178,9 +211,7 @@ def executar_pipeline(progress_callback=None, tom_ia="equilibrado"):
 
     _emitir_progresso(progress_callback, "extracao", 20, "Extraindo dados dos anúncios...")
 
-
     navegador = Navegador()
-
 
     salvos = 0
     descartados = 0
@@ -190,7 +221,6 @@ def executar_pipeline(progress_callback=None, tom_ia="equilibrado"):
     total_score_qualidade = 0
     imoveis_capturados = []
     metricas_portal = {}
-
 
     try:
 
@@ -222,57 +252,54 @@ def executar_pipeline(progress_callback=None, tom_ia="equilibrado"):
                 anuncio["link"]
             )
 
+            imovel = _criar_imovel_estruturado(anuncio)
+            if imovel is None:
+                try:
+                    pagina, texto = _abrir_com_retry(navegador, anuncio["link"], tentativas=3)
 
-            try:
-                pagina, texto = _abrir_com_retry(navegador, anuncio["link"], tentativas=3)
+                    if anuncio["portal"] == "ARLETE":
+                        midias = _coletar_midias_imogestao(pagina, anuncio["link"])
+                        if midias:
+                            texto = (
+                                texto
+                                + "\n\nIMAGENS_IMOGESTAO:\n"
+                                + "\n".join(midias)
+                            )
 
-                if anuncio["portal"] == "ARLETE":
-                    midias = _coletar_midias_imogestao(pagina, anuncio["link"])
-                    if midias:
-                        texto = (
-                            texto
-                            + "\n\nIMAGENS_IMOGESTAO:\n"
-                            + "\n".join(midias)
-                        )
+                except Exception as erro:
 
+                    print(
+                        "Falha ao abrir:",
+                        anuncio["link"],
+                        erro
+                    )
 
-            except Exception as erro:
+                    falhas_abertura += 1
+                    metricas_portal[portal_nome]["falhas_abertura"] += 1
+                    obs.evento(
+                        "falha_abertura",
+                        {
+                            "portal": portal_nome,
+                            "link": anuncio.get("link"),
+                            "erro": str(erro),
+                        },
+                    )
 
-                print(
-                    "Falha ao abrir:",
-                    anuncio["link"],
-                    erro
+                    continue
+
+                extrator = escolher_extrator(
+
+                    anuncio["portal"]
+
                 )
 
-                falhas_abertura += 1
-                metricas_portal[portal_nome]["falhas_abertura"] += 1
-                obs.evento(
-                    "falha_abertura",
-                    {
-                        "portal": portal_nome,
-                        "link": anuncio.get("link"),
-                        "erro": str(erro),
-                    },
+                imovel = extrator.extrair(
+
+                    texto,
+
+                    anuncio["link"]
+
                 )
-
-                continue
-
-
-
-            extrator = escolher_extrator(
-
-                anuncio["portal"]
-
-            )
-
-
-            imovel = extrator.extrair(
-
-                texto,
-
-                anuncio["link"]
-
-            )
 
             if anuncios:
                 base = 65
@@ -332,8 +359,6 @@ def executar_pipeline(progress_callback=None, tom_ia="equilibrado"):
                 metricas_portal[portal_nome]["salvos"] += 1
 
             processados += 1
-
-
 
     finally:
 

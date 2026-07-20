@@ -1,6 +1,7 @@
 from captadores.imoblu import CaptadorImoblu
 from captadores.zelt import CaptadorZelt
 from captadores.arlete import CaptadorArlete
+from captadores.imoveis_sc import CaptadorImoveisSC
 import time
 
 
@@ -17,7 +18,9 @@ def executar_todos():
 
         CaptadorZelt(),
 
-        CaptadorArlete()
+        CaptadorArlete(),
+
+        CaptadorImoveisSC()
 
     ]
 

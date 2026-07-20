@@ -140,7 +140,9 @@ def salvar_imovel(imovel):
             descricao,
             link,
             data_captura,
-            status
+            status,
+            pontuacao,
+            classificacao
 
         )
 
@@ -163,7 +165,9 @@ def salvar_imovel(imovel):
             :descricao,
             :link,
             :data_captura,
-            :status
+            :status,
+            :pontuacao,
+            :classificacao
 
         )
         """,
